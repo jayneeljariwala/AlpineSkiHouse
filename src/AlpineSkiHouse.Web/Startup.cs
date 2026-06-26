@@ -5,6 +5,7 @@ using MediatR;
 using AlpineSkiHouse.Data;
 using AlpineSkiHouse.Models;
 using AlpineSkiHouse.Services;
+using AlpineSkiHouse.Web.Services;
 using AlpineSkiHouse.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -52,19 +53,24 @@ namespace AlpineSkiHouse
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Startup).Assembly));
 
             services.AddDbContext<ApplicationUserContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
             services.AddDbContext<SkiCardContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
             services.AddDbContext<PassContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
             services.AddDbContext<PassTypeContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
             services.AddDbContext<ResortContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                       .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -87,7 +93,7 @@ namespace AlpineSkiHouse
             services.Configure<AzureStorageSettings>(Configuration.GetSection("MicrosoftAzureStorage"));
             services.AddTransient<IBlobFileUploadService, BlobFileUploadService>();
 
-            services.AddSingleton<IAuthorizationHandler, EditSkiCardAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, EditSkiCardAuthorizationHandler>();
 
             services.AddOptions();
             services.Configure<CsrInformationOptions>(Configuration.GetSection("CsrInformationOptions"));
@@ -126,6 +132,8 @@ namespace AlpineSkiHouse
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
+            services.AddTransient<IDateService, DateService>();
+            services.AddScoped<IPassValidityChecker, PassValidityChecker>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
