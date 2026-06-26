@@ -1,4 +1,4 @@
-﻿using AlpineSkiHouse.Data;
+using AlpineSkiHouse.Data;
 using AlpineSkiHouse.Events;
 using AlpineSkiHouse.Web.Handlers;
 using AlpineSkiHouse.Services;
@@ -8,6 +8,7 @@ using MediatR;
 using Moq;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AlpineSkiHouse.Web.Tests.Handlers
@@ -28,7 +29,7 @@ namespace AlpineSkiHouse.Web.Tests.Handlers
             }
 
             [Fact]
-            public void A_new_pass_activation_is_saved_to_the_database()
+            public async Task A_new_pass_activation_is_saved_to_the_database()
             {
                 using (PassContext context = GetContext())
                 {
@@ -36,7 +37,7 @@ namespace AlpineSkiHouse.Web.Tests.Handlers
                     Mock<IMediator> mediatorMock = new Mock<IMediator>();
 
                     var sut = new ActivatePassHandler(context, mediatorMock.Object);
-                    sut.Handle(activatePass);
+                    await sut.Handle(activatePass, default);
 
                     Assert.Equal(1, context.PassActivations.Count());
                     var passActivateThatWasAdded = context.PassActivations.Single();
@@ -46,16 +47,16 @@ namespace AlpineSkiHouse.Web.Tests.Handlers
             }
 
             [Fact]
-            public void The_pass_activated_event_is_raised()
+            public async Task The_pass_activated_event_is_raised()
             {
                 using (PassContext context = GetContext())
                 {
                     Mock<IMediator> mediatorMock = new Mock<IMediator>();
 
                     var sut = new ActivatePassHandler(context, mediatorMock.Object);
-                    var activationId = sut.Handle(activatePass);
+                    var activationId = await sut.Handle(activatePass, default);
 
-                    mediatorMock.Verify(m => m.Publish(It.Is<PassActivated>(c => c.PassActivationId == activationId)));
+                    mediatorMock.Verify(m => m.Publish(It.Is<PassActivated>(c => c.PassActivationId == activationId), default));
                 }
             }
         }

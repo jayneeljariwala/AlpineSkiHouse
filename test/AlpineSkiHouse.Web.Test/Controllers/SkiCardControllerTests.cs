@@ -1,4 +1,4 @@
-﻿using AlpineSkiHouse.Data;
+using AlpineSkiHouse.Data;
 using AlpineSkiHouse.Models;
 using AlpineSkiHouse.Models.SkiCardViewModels;
 using AlpineSkiHouse.Security;
@@ -87,7 +87,7 @@ namespace AlpineSkiHouse.Web.Tests.Controllers
             }
 
             [Fact]
-            public async void EditActionShouldReturnChallengeResult()
+            public async Task EditActionShouldReturnChallengeResult()
             {
                 var logger = new Mock<ILogger<SkiCardController>>();
                 var uploader = new Mock<IBlobFileUploadService>();
@@ -102,7 +102,7 @@ namespace AlpineSkiHouse.Web.Tests.Controllers
                               _skiCard,
                               It.Is<IEnumerable<IAuthorizationRequirement>>(
                                   r => r.Count() == 1 && r.First() is EditSkiCardAuthorizationRequirement)))
-                    .Returns(Task.FromResult(false));
+                    .ReturnsAsync(AuthorizationResult.Failed());
 
                 var result = await controller.Edit(new EditSkiCardViewModel
                 {
@@ -127,4 +127,3 @@ namespace AlpineSkiHouse.Web.Tests.Controllers
 
     }
 }
-

@@ -161,7 +161,7 @@ namespace AlpineSkiHouse.Web.Controllers
                 CardHolderPhoneNumber = skiCard.CardHolderPhoneNumber
             };
 
-            if (await _authorizationService.AuthorizeAsync(User, skiCard, new EditSkiCardAuthorizationRequirement()))
+            if ((await _authorizationService.AuthorizeAsync(User, skiCard, new EditSkiCardAuthorizationRequirement())).Succeeded)
             {
                 return View(skiCardViewModel);
             }
@@ -185,7 +185,7 @@ namespace AlpineSkiHouse.Web.Controllers
                 {
                     return NotFound();
                 }
-                else if (await _authorizationService.AuthorizeAsync(User, skiCard, new EditSkiCardAuthorizationRequirement()))
+                else if ((await _authorizationService.AuthorizeAsync(User, skiCard, new EditSkiCardAuthorizationRequirement())).Succeeded)
                 {
                     skiCard.CardHolderFirstName = viewModel.CardHolderFirstName;
                     skiCard.CardHolderLastName = viewModel.CardHolderLastName;

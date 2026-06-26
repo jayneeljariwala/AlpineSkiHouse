@@ -1,5 +1,5 @@
-﻿@using Microsoft.AspNetCore.Mvc.Localization
-
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject Microsoft.ApplicationInsights.AspNetCore.JavaScriptSnippet JavaScriptSnippet
 @inject IHtmlLocalizer<SharedResources> SharedLocalizer
 
 <!DOCTYPE html>
@@ -20,7 +20,7 @@
     </environment>
     <script src="~/jspm_packages/system.js"></script>
     <script src="~/js/jspmconfig.js"></script>
-    @Html.ApplicationInsightsJavaScript(TelemetryConfiguration)
+    @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
 
 <body>

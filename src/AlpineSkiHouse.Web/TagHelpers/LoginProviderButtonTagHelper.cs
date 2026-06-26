@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace AlpineSkiHouse.TagHelpers
@@ -7,18 +7,18 @@ namespace AlpineSkiHouse.TagHelpers
     public class LoginProviderButtonTagHelper : TagHelper
     {
         [HtmlAttributeName("ski-login-provider")]
-        public AuthenticationDescription LoginProvider { get; set; }
+        public AuthenticationScheme LoginProvider { get; set; }
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             output.Attributes.SetAttribute("type", "submit");
             output.Attributes.SetAttribute("name", "provider");
-            output.Attributes.SetAttribute("value", LoginProvider.AuthenticationScheme);
+            output.Attributes.SetAttribute("value", LoginProvider.Name);
             output.Attributes.SetAttribute("title", $"Log in using your {LoginProvider.DisplayName} account");
 
             output.Attributes.MergeClassAttributeValue("btn btn-default");            
 
-            output.Content.SetContent(LoginProvider.AuthenticationScheme);
+            output.Content.SetContent(LoginProvider.Name);
         }
     }
 }

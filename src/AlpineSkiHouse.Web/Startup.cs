@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using MediatR;
@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using System.Reflection;
 using AlpineSkiHouse.Configuration;
 using Serilog;
@@ -26,12 +27,13 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
 using AlpineSkiHouse.Conventions;
+using Microsoft.Extensions.Hosting;
 
 namespace AlpineSkiHouse
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             Configuration = AlpineConfigurationBuilder.Build(env);
             CurrentEnvironment = env;
@@ -39,7 +41,7 @@ namespace AlpineSkiHouse
 
         public IConfigurationRoot Configuration { get; }
 
-        public IHostingEnvironment CurrentEnvironment {get ;}
+        public IWebHostEnvironment CurrentEnvironment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -47,10 +49,7 @@ namespace AlpineSkiHouse
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddScoped<SingleInstanceFactory>(p => t => p.GetRequiredService(t));
-            services.AddScoped<MultiInstanceFactory>(p => t => p.GetServices(t));
-
-            services.AddMediatR(typeof(Startup).GetTypeInfo().Assembly);
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Startup).Assembly));
 
             services.AddDbContext<ApplicationUserContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
@@ -67,9 +66,23 @@ namespace AlpineSkiHouse
             services.AddDbContext<ResortContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddDatabaseDeveloperPageExceptionFilter();
+
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationUserContext>()
                 .AddDefaultTokenProviders();
+
+            services.AddAuthentication()
+                .AddFacebook(options =>
+                {
+                    options.AppId = Configuration["Authentication:Facebook:AppId"];
+                    options.AppSecret = Configuration["Authentication:Facebook:AppSecret"];
+                })
+                .AddTwitter(options =>
+                {
+                    options.ConsumerKey = Configuration["Authentication:Twitter:ConsumerKey"];
+                    options.ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"];
+                });
 
             services.Configure<AzureStorageSettings>(Configuration.GetSection("MicrosoftAzureStorage"));
             services.AddTransient<IBlobFileUploadService, BlobFileUploadService>();
@@ -88,7 +101,6 @@ namespace AlpineSkiHouse
             })
                 .AddViewLocalization()
                 .AddDataAnnotationsLocalization();
-
 
             var supportedCultures = new[]
             {
@@ -117,79 +129,53 @@ namespace AlpineSkiHouse
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime applicationLifetime, IOptions<RequestLocalizationOptions> requestLocalizationOptions)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IHostApplicationLifetime applicationLifetime, IOptions<RequestLocalizationOptions> requestLocalizationOptions)
         {
-            // Console logging
-            // uncomment to use the default console logger
-            // var loggingConfig = Configuration.GetSection("Logging");
-            // loggerFactory.AddConsole(loggingConfig);
-            // end of Console logging
-
-            loggerFactory.AddDebug((className, logLevel) =>
-            {
-                if (className.StartsWith("AlpineSkiHouse."))
-                    return true;
-                return false;
-            });
-
             // Serilog config
-            // comment out if using the default console logger
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()                
                 .MinimumLevel.Override("AlpineSkiHouse", Serilog.Events.LogEventLevel.Debug)
                 .Enrich.FromLogContext()
-                .WriteTo.LiterateConsole()
+                .WriteTo.Console()
                 .WriteTo.Seq("http://localhost:5341")
                 .CreateLogger();
 
-            loggerFactory.AddSerilog();
             applicationLifetime.ApplicationStopped.Register(Log.CloseAndFlush);
             // end of Serilog config
-
-            app.UseApplicationInsightsRequestTelemetry();
 
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
-                app.UseBrowserLink();
+                app.UseMigrationsEndPoint();
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseApplicationInsightsExceptionTelemetry();
-
             app.UseStaticFiles();
 
-            app.UseIdentity();
+            app.UseRouting();
 
-            // Add external authentication middleware below. To configure them please see http://go.microsoft.com/fwlink/?LinkID=532715
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            // Add external authentication verification
             if (Configuration["Authentication:Facebook:AppId"] == null ||
                 Configuration["Authentication:Facebook:AppSecret"] == null ||
                 Configuration["Authentication:Twitter:ConsumerKey"] == null ||
                 Configuration["Authentication:Twitter:ConsumerSecret"] == null)
+            {
                 throw new KeyNotFoundException("A configuration value is missing for authentication against Facebook and Twitter. While you don't need to get tokens for these you do need to set up your user secrets as described in the readme.");
-            app.UseFacebookAuthentication(new FacebookOptions
-            {
-                AppId = Configuration["Authentication:Facebook:AppId"],
-                AppSecret = Configuration["Authentication:Facebook:AppSecret"]
-            });
-
-            app.UseTwitterAuthentication(new TwitterOptions
-            {
-                ConsumerKey = Configuration["Authentication:Twitter:ConsumerKey"],
-                ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"]
-            });
+            }
             
             app.UseRequestLocalization(requestLocalizationOptions.Value);
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

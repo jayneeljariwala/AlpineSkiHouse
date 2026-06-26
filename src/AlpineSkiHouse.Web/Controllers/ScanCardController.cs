@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using AlpineSkiHouse.Web.Services;
 using MediatR;
 using AlpineSkiHouse.Web.Command;
 using AlpineSkiHouse.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using AlpineSkiHouse.Models;
 using AlpineSkiHouse.Web.Queries;
 using AlpineSkiHouse.Services;
@@ -29,11 +30,11 @@ namespace AlpineSkiHouse.Web.Controllers
         /// <param name="cardId"></param>
         /// <param name="locationId"></param>
         /// <returns></returns>
-        public IActionResult Get(int cardId, int locationId)
+        public async Task<IActionResult> Get(int cardId, int locationId)
         {
-            var scanId = _mediator.Send(new CreateScan { CardId = cardId, LocationId = locationId });
+            var scanId = await _mediator.Send(new CreateScan { CardId = cardId, LocationId = locationId });
 
-            Pass pass = _mediator.Send(new ResolvePass { CardId = cardId, LocationId = locationId, DateTime =_dateService.Now() });
+            Pass pass = await _mediator.Send(new ResolvePass { CardId = cardId, LocationId = locationId, DateTime = _dateService.Now() });
 
             if (pass == null)
             {
@@ -43,7 +44,7 @@ namespace AlpineSkiHouse.Web.Controllers
 
             if (!_passContext.PassActivations.Any(p => p.PassId == pass.Id))
             {
-                _mediator.Send(new ActivatePass { PassId = pass.Id, ScanId = scanId });
+                await _mediator.Send(new ActivatePass { PassId = pass.Id, ScanId = scanId });
             }
             
             //TODO: We might want to publish an event that a pass was validated at the current location
