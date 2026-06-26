@@ -1,4 +1,4 @@
-﻿using AlpineSkiHouse.Configuration.Models;
+using AlpineSkiHouse.Configuration.Models;
 using AlpineSkiHouse.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -9,11 +9,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AlpineSkiHouse.Handlers
 {
-    public class QueueResizeOnSkiCardImageUploadedHandler : IAsyncNotificationHandler<SkiCardImageUploaded>
+    public class QueueResizeOnSkiCardImageUploadedHandler : INotificationHandler<SkiCardImageUploaded>
     {
         private readonly ILogger<QueueResizeOnSkiCardImageUploadedHandler> _logger;
         private readonly AzureStorageSettings _storageSettings;
@@ -24,7 +25,7 @@ namespace AlpineSkiHouse.Handlers
             _storageSettings = storageSettings.Value;
         }
 
-        public async Task Handle(SkiCardImageUploaded notification)
+        public async Task Handle(SkiCardImageUploaded notification, CancellationToken cancellationToken)
         {
             // prepare the queue client
             var storageAccount = CloudStorageAccount.Parse(_storageSettings.AzureStorageConnectionString);

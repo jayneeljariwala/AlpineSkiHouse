@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
-using System.Linq;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace AlpineSkiHouse
 {
@@ -11,20 +10,19 @@ namespace AlpineSkiHouse
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                        .AddCommandLine(args)
-                        .AddJsonFile("hosting.json", optional: true)
-                        .Build();
-
-            var host = new WebHostBuilder()
-                .UseConfiguration(config)
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
-
-            host.Run();
+            CreateHostBuilder(args).Build().Run();
         }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config.AddJsonFile("hosting.json", optional: true);
+                    config.AddCommandLine(args);
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }

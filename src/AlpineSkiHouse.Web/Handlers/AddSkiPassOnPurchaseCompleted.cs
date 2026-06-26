@@ -1,10 +1,12 @@
-﻿using AlpineSkiHouse.Data;
+using AlpineSkiHouse.Data;
 using AlpineSkiHouse.Events;
 using AlpineSkiHouse.Models;
 using AlpineSkiHouse.Services;
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AlpineSkiHouse.Handlers
 {
@@ -21,7 +23,7 @@ namespace AlpineSkiHouse.Handlers
             _bus = bus;
         }
 
-        public void Handle(PurchaseCompleted notification)
+        public async Task Handle(PurchaseCompleted notification, CancellationToken cancellationToken)
         {
             var newPasses = new List<Pass>();
             foreach (var passPurchase in notification.Passes)
@@ -36,7 +38,7 @@ namespace AlpineSkiHouse.Handlers
             }
 
             _passContext.Passes.AddRange(newPasses);
-            _passContext.SaveChanges();
+            await _passContext.SaveChangesAsync(cancellationToken);
 
             foreach (var newPass in newPasses)
             {
@@ -47,9 +49,8 @@ namespace AlpineSkiHouse.Handlers
                     CardId = newPass.CardId,
                     CreatedOn = newPass.CreatedOn
                 };
-                _bus.Publish(passAddedEvent);
+                await _bus.Publish(passAddedEvent, cancellationToken);
             }
-
         }
     }
 }

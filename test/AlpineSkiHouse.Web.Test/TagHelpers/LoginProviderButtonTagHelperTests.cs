@@ -1,5 +1,5 @@
-﻿using AlpineSkiHouse.TagHelpers;
-using Microsoft.AspNetCore.Http.Authentication;
+using AlpineSkiHouse.TagHelpers;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
 using System.Collections.Generic;
@@ -15,16 +15,16 @@ namespace AlpineSkiHouse.Web.Tests.TagHelpers
         {
             TagHelperContext _context;
             TagHelperOutput _output;
-            AuthenticationDescription _loginProvider;
+            AuthenticationScheme _loginProvider;
             LoginProviderButtonTagHelper _tagHelper;
 
             public WhenTargettingAnEmptyButtonTag()
             {
-                _loginProvider = new AuthenticationDescription
-                {
-                    DisplayName = "This is the display name",
-                    AuthenticationScheme = "This is the scheme"
-                };
+                _loginProvider = new AuthenticationScheme(
+                    "This is the scheme",
+                    "This is the display name",
+                    typeof(IAuthenticationHandler)
+                );
 
                 _tagHelper = new LoginProviderButtonTagHelper()
                 {
@@ -59,7 +59,7 @@ namespace AlpineSkiHouse.Web.Tests.TagHelpers
                 _tagHelper.Process(_context, _output);
 
                 Assert.True(_output.Attributes.ContainsName("value"));
-                Assert.Equal(_loginProvider.AuthenticationScheme, _output.Attributes["value"].Value);
+                Assert.Equal(_loginProvider.Name, _output.Attributes["value"].Value);
             }
 
             [Fact]
@@ -76,7 +76,7 @@ namespace AlpineSkiHouse.Web.Tests.TagHelpers
             {
                 _tagHelper.Process(_context, _output);
 
-                Assert.Equal(_loginProvider.AuthenticationScheme, _output.Content.GetContent());
+                Assert.Equal(_loginProvider.Name, _output.Content.GetContent());
             }
         }
 

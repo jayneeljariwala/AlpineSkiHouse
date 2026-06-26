@@ -1,21 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace AlpineSkiHouse.Web.Tests.Data
 {
-public static class InMemoryDbContextOptionsFactory
-{
-    public static DbContextOptions<T> Create<T>() where T : DbContext
+    public static class InMemoryDbContextOptionsFactory
     {
-        var serviceProvider = new ServiceCollection()
-            .AddEntityFrameworkInMemoryDatabase()
-            .BuildServiceProvider();
-            
-        var builder = new DbContextOptionsBuilder<T>();
-        builder.UseInMemoryDatabase()
-                .UseInternalServiceProvider(serviceProvider);
-
-        return builder.Options;
+        public static DbContextOptions<T> Create<T>() where T : DbContext
+        {
+            var builder = new DbContextOptionsBuilder<T>();
+            builder.UseInMemoryDatabase(System.Guid.NewGuid().ToString());
+            return builder.Options;
+        }
     }
-}
 }

@@ -1,4 +1,4 @@
-﻿using AlpineSkiHouse.Data;
+using AlpineSkiHouse.Data;
 using AlpineSkiHouse.Models;
 using AlpineSkiHouse.Services;
 using AlpineSkiHouse.Web.Handlers;
@@ -27,7 +27,7 @@ namespace AlpineSkiHouse.Web.Tests.Services
         }
 
         [Fact]
-        public void Should_check_context_using_provided_card_id()
+        public async Task Should_check_context_using_provided_card_id()
         {
             var context = new PassContext(InMemoryDbContextOptionsFactory.Create<PassContext>());
             var cardId = 1337;
@@ -43,7 +43,7 @@ namespace AlpineSkiHouse.Web.Tests.Services
 
             var handler = new ResolvePassHandler(context, validator.Object);
 
-            handler.Handle(new Queries.ResolvePass { CardId = cardId });
+            await handler.Handle(new Queries.ResolvePass { CardId = cardId }, default);
 
             validator.Verify(v => v.IsValid(It.Is<int>(i => i == verifyingPassId)), Times.Once);
             validator.Verify(v => v.IsValid(It.IsAny<int>()), Times.Exactly(3));

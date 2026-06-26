@@ -1,6 +1,5 @@
-﻿using Microsoft.Azure.WebJobs;
-using System;
-using System.Linq;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Azure.WebJobs;
 
 namespace AlpineSkiHouse.WebJobs
 {
@@ -8,8 +7,18 @@ namespace AlpineSkiHouse.WebJobs
     {
         public static void Main(string[] args)
         {
-            JobHost host = new JobHost();
-            host.RunAndBlock();
+            var builder = new HostBuilder();
+            builder.ConfigureWebJobs(b =>
+            {
+                b.AddAzureStorageCoreServices();
+                b.AddAzureStorageQueues();
+                b.AddAzureStorageBlobs();
+            });
+            var host = builder.Build();
+            using (host)
+            {
+                host.Run();
+            }
         }
     }
 }
