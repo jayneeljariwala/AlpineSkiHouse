@@ -1,4 +1,4 @@
-﻿/// <binding Clean='clean' ProjectOpened='watch' />
+/// <binding Clean='clean' ProjectOpened='watch' />
 "use strict";
 
 var gulp = require("gulp"),
@@ -9,8 +9,7 @@ var gulp = require("gulp"),
     typescript = require("gulp-typescript"),
     rename = require("gulp-rename2"),
     watch = require("gulp-watch"),
-    imageop = require('gulp-image-optimization'),
-    sass = require("gulp-sass"),
+    sass = require("gulp-sass")(require("sass")),
     merge = require("merge-stream"),
     plumber = require("gulp-plumber");
 
@@ -85,11 +84,7 @@ gulp.task("sass", function(){
 gulp.task("images", function()
 {
     return gulp.src(paths.images)
-        .pipe(imageop({
-            optimizationLevel: 5,
-            progressive: true,
-            interlaced: true
-        })).pipe(gulp.dest(paths.imagesDest));
+        .pipe(gulp.dest(paths.imagesDest));
 });
 
 gulp.task("min:css", function () {
